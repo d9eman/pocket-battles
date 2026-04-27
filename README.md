@@ -80,3 +80,5 @@ Observer Pattern: BattleEvents are published and logged to battle log
 - Arcanine
 - Togekiss
 - Absol
+
+AI Note: AI was utilized in the creation of the UI (even though the sprites and background were all found and implemented  by me) and AI helped pool together pokemon stats and their moves.
