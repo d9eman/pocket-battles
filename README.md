@@ -163,7 +163,7 @@ The factories currently include:
 - Lucario
 - Dragonite
 - Snorlax
-- Sylveon
+- Gardevoir
 
 The UI demo uses:
 

@@ -33,31 +33,20 @@ public class BattleEngineTest {
     @Test
     void grassAgainstWaterGroundIsFourTimesEffective() {
         TypeChart typeChart = new SimpleTypeChart();
-
-        double multiplier = typeChart.multiplier(
-                Type.GRASS,
-                List.of(Type.WATER, Type.GROUND)
-        );
-
+        double multiplier = typeChart.multiplier(Type.GRASS, List.of(Type.WATER, Type.GROUND));
         assertEquals(4.0, multiplier, 0.0001);
     }
 
     @Test
     void electricMoveDoesNotAffectGroundType() {
         TypeChart typeChart = new SimpleTypeChart();
-
-        double multiplier = typeChart.multiplier(
-                Type.ELECTRIC,
-                List.of(Type.GROUND)
-        );
-
+        double multiplier = typeChart.multiplier(Type.ELECTRIC, List.of(Type.GROUND));
         assertEquals(0.0, multiplier, 0.0001);
     }
 
     @Test
     void fasterPokemonActsFirstWhenPriorityIsTheSame() {
         TestSetup setup = new TestSetup();
-
         Trainer trainer1 = new Trainer("Ash", List.of(PokemonFactory.pikachu()));
         Trainer trainer2 = new Trainer("Misty", List.of(PokemonFactory.blastoise()));
 
@@ -73,21 +62,20 @@ public class BattleEngineTest {
     @Test
     void protectBlocksDamageForThatTurn() {
         TestSetup setup = new TestSetup();
-
-        Trainer trainer1 = new Trainer("Ash", List.of(PokemonFactory.venusaur()));
+        Trainer trainer1 = new Trainer("Ash", List.of(PokemonFactory.gardevoir()));
         Trainer trainer2 = new Trainer("Gary", List.of(PokemonFactory.charizard()));
 
-        Pokemon venusaur = trainer1.getActivePokemon();
-        int startingHp = venusaur.getCurrentHp();
+        Pokemon gardevorir = trainer1.getActivePokemon();
+        int startingHp = gardevorir.getCurrentHp();
 
-        BattleAction protect = new UseMoveAction(venusaur.getMoves().get(3));
+        BattleAction protect = new UseMoveAction(gardevorir.getMoves().get(3));
         BattleAction fire = new UseMoveAction(trainer2.getActivePokemon().getMoves().get(0));
 
         setup.engine.playTurn(trainer1, protect, trainer2, fire);
 
-        assertEquals(startingHp, venusaur.getCurrentHp());
-        assertTrue(setup.logger.messages.contains("Venusaur is protected this turn."));
-        assertTrue(setup.logger.messages.contains("Venusaur protected itself!"));
+        assertEquals(startingHp, gardevorir.getCurrentHp());
+        assertTrue(setup.logger.messages.contains("Gardevoir is protected this turn."));
+        assertTrue(setup.logger.messages.contains("Gardevoir protected itself!"));
     }
 
     @Test
@@ -96,20 +84,34 @@ public class BattleEngineTest {
 
         Pokemon attacker1 = PokemonFactory.garchomp();
         Pokemon defender1 = PokemonFactory.blastoise();
-
         int defender1StartHp = defender1.getCurrentHp();
         attacker1.getMoves().get(1).use(setup.context, attacker1, defender1);
         int damageWithoutBuff = defender1StartHp - defender1.getCurrentHp();
 
         Pokemon attacker2 = PokemonFactory.garchomp();
         Pokemon defender2 = PokemonFactory.blastoise();
-
         attacker2.getMoves().get(3).use(setup.context, attacker2, defender2);
         int defender2StartHp = defender2.getCurrentHp();
         attacker2.getMoves().get(1).use(setup.context, attacker2, defender2);
         int damageWithBuff = defender2StartHp - defender2.getCurrentHp();
 
         assertTrue(damageWithBuff > damageWithoutBuff);
+    }
+
+    @Test
+    void calmMindBoostsSpecialAttackAndSpecialDefense() {
+        TestSetup setup = new TestSetup();
+
+        Pokemon starmie = PokemonFactory.starmie();
+        Pokemon blastoise = PokemonFactory.blastoise();
+
+        int specialAttackBefore = starmie.getEffectiveSpecialAttack();
+        int specialDefenseBefore = starmie.getEffectiveSpecialDefense();
+
+        starmie.getMoves().get(3).use(setup.context, starmie, blastoise);
+
+        assertTrue(starmie.getEffectiveSpecialAttack() > specialAttackBefore);
+        assertTrue(starmie.getEffectiveSpecialDefense() > specialDefenseBefore);
     }
 
     @Test

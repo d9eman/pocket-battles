@@ -1,5 +1,22 @@
 package pocketbattles.model;
 
 public enum Type {
-    NORMAL, FIRE, WATER, GRASS, ELECTRIC, GROUND, FLYING, POISON, DRAGON, GHOST, FIGHTING, STEEL, ICE, FAIRY, ROCK, DARK
+    NORMAL,
+    FIRE,
+    WATER,
+    GRASS,
+    ELECTRIC,
+    ICE,
+    FIGHTING,
+    POISON,
+    GROUND,
+    FLYING,
+    PSYCHIC,
+    BUG,
+    ROCK,
+    GHOST,
+    DRAGON,
+    DARK,
+    STEEL,
+    FAIRY
 }

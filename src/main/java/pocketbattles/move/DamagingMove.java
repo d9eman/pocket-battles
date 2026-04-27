@@ -52,7 +52,7 @@ public class DamagingMove implements Move {
 
     @Override
     public void use(BattleContext context, Pokemon user, Pokemon target) {
-        context.publish(user.getName() + " used " + name + ".");
+        context.publish(user.getName() + " used " + name + '.');
 
         if (!context.getAccuracyPolicy().hits(this)) {
             context.publish(name + " missed!");
@@ -66,7 +66,6 @@ public class DamagingMove implements Move {
 
         int damage = context.getDamageCalculator().calculate(user, target, this);
         target.takeDamage(damage);
-
         context.publish(target.getName() + " took " + damage + " damage.");
 
         if (target.isFainted()) {

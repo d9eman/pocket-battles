@@ -41,7 +41,7 @@ public class StatusMove implements Move {
 
     @Override
     public void use(BattleContext context, Pokemon user, Pokemon target) {
-        context.publish(user.getName() + " used " + name + ".");
+        context.publish(user.getName() + " used " + name + '.');
 
         if (!context.getAccuracyPolicy().hits(this)) {
             context.publish(name + " failed!");
