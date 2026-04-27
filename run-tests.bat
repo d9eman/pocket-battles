@@ -1,0 +1,3 @@
+@echo off
+setlocal
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Remove-Item -Recurse -Force out -ErrorAction SilentlyContinue; New-Item -ItemType Directory out | Out-Null; javac -d out (Get-ChildItem -Recurse src\main\java\*.java).FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; javac -cp 'out;lib\junit-4.13.2.jar;lib\hamcrest-core-1.3.jar' -d out (Get-ChildItem -Recurse src\test\java\*.java).FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; java -cp 'out;src\main\resources;lib\junit-4.13.2.jar;lib\hamcrest-core-1.3.jar' org.junit.runner.JUnitCore pocketbattles.BattleEngineTest"

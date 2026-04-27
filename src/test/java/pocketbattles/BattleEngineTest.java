@@ -1,6 +1,6 @@
 package pocketbattles;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import pocketbattles.action.BattleAction;
 import pocketbattles.action.SwitchPokemonAction;
 import pocketbattles.action.UseMoveAction;
@@ -24,28 +24,28 @@ import pocketbattles.strategy.TypeChart;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class BattleEngineTest {
 
     @Test
-    void grassAgainstWaterGroundIsFourTimesEffective() {
+    public void grassAgainstWaterGroundIsFourTimesEffective() {
         TypeChart typeChart = new SimpleTypeChart();
         double multiplier = typeChart.multiplier(Type.GRASS, List.of(Type.WATER, Type.GROUND));
         assertEquals(4.0, multiplier, 0.0001);
     }
 
     @Test
-    void electricMoveDoesNotAffectGroundType() {
+    public void electricMoveDoesNotAffectGroundType() {
         TypeChart typeChart = new SimpleTypeChart();
         double multiplier = typeChart.multiplier(Type.ELECTRIC, List.of(Type.GROUND));
         assertEquals(0.0, multiplier, 0.0001);
     }
 
     @Test
-    void fasterPokemonActsFirstWhenPriorityIsTheSame() {
+    public void fasterPokemonActsFirstWhenPriorityIsTheSame() {
         TestSetup setup = new TestSetup();
         Trainer trainer1 = new Trainer("Ash", List.of(PokemonFactory.pikachu()));
         Trainer trainer2 = new Trainer("Misty", List.of(PokemonFactory.blastoise()));
@@ -60,26 +60,59 @@ public class BattleEngineTest {
     }
 
     @Test
-    void protectBlocksDamageForThatTurn() {
+    public void priorityMoveActsBeforeFasterRegularMove() {
+        TestSetup setup = new TestSetup();
+        Trainer trainer1 = new Trainer("Ash", List.of(PokemonFactory.lucario()));
+        Trainer trainer2 = new Trainer("Gary", List.of(PokemonFactory.jolteon()));
+
+        BattleAction extremeSpeed = new UseMoveAction(trainer1.getActivePokemon().getMoves().get(2));
+        BattleAction thunderbolt = new UseMoveAction(trainer2.getActivePokemon().getMoves().get(0));
+
+        setup.engine.playTurn(trainer1, extremeSpeed, trainer2, thunderbolt);
+
+        assertEquals("Lucario used Extreme Speed.", setup.logger.messages.get(0));
+    }
+
+    @Test
+    public void speedBoostCanMakeSlowerPokemonMoveFirst() {
+        TestSetup setup = new TestSetup();
+        Pokemon arcanine = PokemonFactory.arcanine();
+        Pokemon charizard = PokemonFactory.charizard();
+
+        arcanine.getMoves().get(3).use(setup.context, arcanine, charizard);
+        setup.logger.messages.clear();
+
+        Trainer trainer1 = new Trainer("Ash", List.of(arcanine));
+        Trainer trainer2 = new Trainer("Gary", List.of(charizard));
+        BattleAction arcanineAttack = new UseMoveAction(arcanine.getMoves().get(0));
+        BattleAction charizardAttack = new UseMoveAction(charizard.getMoves().get(0));
+
+        setup.engine.playTurn(trainer1, arcanineAttack, trainer2, charizardAttack);
+
+        assertEquals("Arcanine used Flamethrower.", setup.logger.messages.get(0));
+    }
+
+    @Test
+    public void protectBlocksDamageForThatTurn() {
         TestSetup setup = new TestSetup();
         Trainer trainer1 = new Trainer("Ash", List.of(PokemonFactory.gardevoir()));
         Trainer trainer2 = new Trainer("Gary", List.of(PokemonFactory.charizard()));
 
-        Pokemon gardevorir = trainer1.getActivePokemon();
-        int startingHp = gardevorir.getCurrentHp();
+        Pokemon gardevoir = trainer1.getActivePokemon();
+        int startingHp = gardevoir.getCurrentHp();
 
-        BattleAction protect = new UseMoveAction(gardevorir.getMoves().get(3));
+        BattleAction protect = new UseMoveAction(gardevoir.getMoves().get(3));
         BattleAction fire = new UseMoveAction(trainer2.getActivePokemon().getMoves().get(0));
 
         setup.engine.playTurn(trainer1, protect, trainer2, fire);
 
-        assertEquals(startingHp, gardevorir.getCurrentHp());
+        assertEquals(startingHp, gardevoir.getCurrentHp());
         assertTrue(setup.logger.messages.contains("Gardevoir is protected this turn."));
         assertTrue(setup.logger.messages.contains("Gardevoir protected itself!"));
     }
 
     @Test
-    void swordsDanceMakesLaterPhysicalMoveDoMoreDamage() {
+    public void swordsDanceMakesLaterPhysicalMoveDoMoreDamage() {
         TestSetup setup = new TestSetup();
 
         Pokemon attacker1 = PokemonFactory.garchomp();
@@ -99,9 +132,28 @@ public class BattleEngineTest {
     }
 
     @Test
-    void calmMindBoostsSpecialAttackAndSpecialDefense() {
+    public void ironDefenseMakesPokemonTakeLessPhysicalDamage() {
         TestSetup setup = new TestSetup();
 
+        Pokemon attacker1 = PokemonFactory.garchomp();
+        Pokemon defenderWithoutBoost = PokemonFactory.blastoise();
+        int startHpWithoutBoost = defenderWithoutBoost.getCurrentHp();
+        attacker1.getMoves().get(1).use(setup.context, attacker1, defenderWithoutBoost);
+        int damageWithoutBoost = startHpWithoutBoost - defenderWithoutBoost.getCurrentHp();
+
+        Pokemon attacker2 = PokemonFactory.garchomp();
+        Pokemon defenderWithBoost = PokemonFactory.blastoise();
+        defenderWithBoost.getMoves().get(3).use(setup.context, defenderWithBoost, attacker2);
+        int startHpWithBoost = defenderWithBoost.getCurrentHp();
+        attacker2.getMoves().get(1).use(setup.context, attacker2, defenderWithBoost);
+        int damageWithBoost = startHpWithBoost - defenderWithBoost.getCurrentHp();
+
+        assertTrue(damageWithBoost < damageWithoutBoost);
+    }
+
+    @Test
+    public void calmMindBoostsSpecialAttackAndSpecialDefense() {
+        TestSetup setup = new TestSetup();
         Pokemon starmie = PokemonFactory.starmie();
         Pokemon blastoise = PokemonFactory.blastoise();
 
@@ -115,7 +167,47 @@ public class BattleEngineTest {
     }
 
     @Test
-    void switchHappensBeforeRegularAttackAndAttackHitsNewPokemon() {
+    public void calmMindMakesLaterSpecialMoveDoMoreDamage() {
+        TestSetup setup = new TestSetup();
+
+        Pokemon attackerWithoutBoost = PokemonFactory.starmie();
+        Pokemon defender1 = PokemonFactory.blastoise();
+        int defender1StartHp = defender1.getCurrentHp();
+        attackerWithoutBoost.getMoves().get(1).use(setup.context, attackerWithoutBoost, defender1);
+        int damageWithoutBoost = defender1StartHp - defender1.getCurrentHp();
+
+        Pokemon attackerWithBoost = PokemonFactory.starmie();
+        Pokemon defender2 = PokemonFactory.blastoise();
+        attackerWithBoost.getMoves().get(3).use(setup.context, attackerWithBoost, defender2);
+        int defender2StartHp = defender2.getCurrentHp();
+        attackerWithBoost.getMoves().get(1).use(setup.context, attackerWithBoost, defender2);
+        int damageWithBoost = defender2StartHp - defender2.getCurrentHp();
+
+        assertTrue(damageWithBoost > damageWithoutBoost);
+    }
+
+    @Test
+    public void calmMindMakesPokemonTakeLessSpecialDamage() {
+        TestSetup setup = new TestSetup();
+
+        Pokemon attacker1 = PokemonFactory.jolteon();
+        Pokemon defenderWithoutBoost = PokemonFactory.starmie();
+        int startHpWithoutBoost = defenderWithoutBoost.getCurrentHp();
+        attacker1.getMoves().get(0).use(setup.context, attacker1, defenderWithoutBoost);
+        int damageWithoutBoost = startHpWithoutBoost - defenderWithoutBoost.getCurrentHp();
+
+        Pokemon attacker2 = PokemonFactory.jolteon();
+        Pokemon defenderWithBoost = PokemonFactory.starmie();
+        defenderWithBoost.getMoves().get(3).use(setup.context, defenderWithBoost, attacker2);
+        int startHpWithBoost = defenderWithBoost.getCurrentHp();
+        attacker2.getMoves().get(0).use(setup.context, attacker2, defenderWithBoost);
+        int damageWithBoost = startHpWithBoost - defenderWithBoost.getCurrentHp();
+
+        assertTrue(damageWithBoost < damageWithoutBoost);
+    }
+
+    @Test
+    public void switchHappensBeforeRegularAttackAndAttackHitsNewPokemon() {
         TestSetup setup = new TestSetup();
 
         Pokemon charizard = PokemonFactory.charizard();
